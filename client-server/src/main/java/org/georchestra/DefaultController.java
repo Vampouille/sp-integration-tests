@@ -11,6 +11,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 
 @Controller
@@ -22,15 +23,19 @@ public class DefaultController {
 
     @Autowired
     private Test tests;
+    private int responseCode;
+    private String responseType;
     private String response;
 
-    @RequestMapping(method = RequestMethod.POST)
-    public void handlePOSTRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect(this.response);
-    }
-    @RequestMapping(method = RequestMethod.GET)
-    public void handleGETRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect(this.response);
+    @RequestMapping()
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String path = request.getPathInfo();
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        out.println("<title>Example</title>" +
+                "<body bgcolor=FFFFFF>Hello " + path + "</body></html>");
+        out.close();
     }
 
     public void setResponse(String response) {

@@ -17,6 +17,12 @@
       <artifactId>spring-webmvc</artifactId>
       <version>5.0.4.RELEASE</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-server</artifactId>
+      <version>3.9.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -24,6 +30,11 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>9.4.5.v20170502</version>
+        <configuration>
+          <httpConnector>
+            <port>8081</port>
+          </httpConnector>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

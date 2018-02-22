@@ -1,0 +1,63 @@
+version: "2"
+
+volumes:
+  postgresql_data:
+  ldap_data:
+  ldap_config:
+
+services:
+  #  client:
+  #    image: georchestra/sp-integration-tests:latest
+  #    build: client-server/
+  #    depends_on:
+  #      - proxy
+
+  database:
+    image: georchestra/database:latest
+    environment:
+      - POSTGRES_USER=georchestra
+      - POSTGRES_PASSWORD=georchestra
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+
+  ldap:
+    image: georchestra/ldap:latest
+    environment:
+        - SLAPD_ORGANISATION=georchestra
+        - SLAPD_DOMAIN=georchestra.org
+        - SLAPD_PASSWORD=secret
+        - SLAPD_ADDITIONAL_MODULES=groupofmembers
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap
+
+  proxy:
+    image: georchestra/security-proxy:latest
+    depends_on:
+      - ldap
+      - database
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./datadir:/etc/georchestra
+    environment:
+      - XMS=256M
+      - XMX=1G
+
+  cas:
+    image: georchestra/cas:latest
+    depends_on:
+      - ldap
+    volumes:
+      - ./datadir:/etc/georchestra
+    environment:
+      - XMS=256M
+      - XMX=1G
+
+  selenium:
+    image: selenium/standalone-firefox-debug:3.9.1-actinium
+    ports:
+      - "4444:4444"
+      - "5900:5900"
+    volumes:
+      - /dev/shm:/dev/shm
