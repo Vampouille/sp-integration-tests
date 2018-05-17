@@ -1,5 +1,10 @@
 package org.georchestra;
 
+import org.apache.http.Header;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
@@ -11,7 +16,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +56,57 @@ public class Test {
         driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.SECONDS);
         driver.manage().window().setSize(new Dimension(1920, 1080));
 
+        this.testEncodedAccent(driver);
+        this.testRawAccent(driver);
+        this.testRedirect(driver);
+        this.testDuplicateHeader(driver);
+        System.out.println("All tests PASSED !");
+
+        driver.quit();
+    }
+
+    private void testRawAccent(RemoteWebDriver driver) throws Exception {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet("http://proxy:8080/header/?search=émission");
+        CloseableHttpResponse response = httpclient.execute(httpGet);
+        Header[] queryString = response.getHeaders("X-Debug-QueryString-Received");
+        String[] parts = queryString[0].getValue().split("=", 2);
+        if("?search=%C3%A9mission".equals(parts[1])){
+            throw new Exception("Cannot find émission in query string : " + queryString[0]);
+        }
+
+    }
+
+    private void testDuplicateHeader(RemoteWebDriver driver) throws Exception {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet("http://proxy:8080/header/");
+        CloseableHttpResponse response = httpclient.execute(httpGet);
+        Header[] xDebugHeaders = response.getHeaders("X-Debug-Header-Received");
+        if(xDebugHeaders.length < 2){
+            throw new Exception("Cannot find émission in query string : " + xDebugHeaders[0]);
+        }
+
+    }
+
+    private void testEncodedAccent(RemoteWebDriver driver) throws Exception {
+        driver.get("http://proxy:8080/header/?search=émission");
+
+        String queryString = driver.findElements(By.id("queryString")).get(0).getText();
+
+        if(!queryString.contains("%C3%A9mission")){
+            throw new Exception("Cannot find émission in query string : " + queryString);
+        }
+
+        driver.get("http://proxy:8080/header/?search=%20mission");
+
+        queryString = driver.findElements(By.id("queryString")).get(0).getText();
+
+        if(!queryString.contains("%20mission")){
+            throw new Exception("Cannot find émission in query string : " + queryString);
+        }
+    }
+
+    private void testRedirect(RemoteWebDriver driver) throws Exception {
         //Should redirect to cas login page
         driver.get("http://proxy:8080/header/?login");
 
@@ -85,8 +140,6 @@ public class Test {
         if(expectedHeaders.size() > 0){
             throw new Exception("Some header cannot be found or has wrong value : " + expectedHeaders.toString());
         }
-
-        driver.quit();
     }
 
     private void checkPath(RemoteWebDriver driver, String path) throws Exception {

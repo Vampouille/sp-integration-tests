@@ -58,12 +58,16 @@ public class DefaultController {
                 Enumeration<String> values = request.getHeaders(headerName);
                 while(values.hasMoreElements()){
                     String value = values.nextElement();
-                    out.print("<li>" + headerName + ": " + value + "</li>");
+                    out.print("<li>" + headerName + ": " + value + "</li>\n");
+                    response.addHeader("X-Debug-Header-Received", headerName + "=" + value);
                 }
             }
             out.print("</ul>");
             out.print("<h2>Path</h2>");
-            out.print("<div id='path'>" + request.getPathInfo() + "</div>");
+            out.print("<div id='path'>" + request.getPathInfo() + "</div>\n");
+            response.addHeader("X-Debug-Path-Received", request.getPathInfo());
+            out.print("<div id='queryString'>" + request.getQueryString() + "</div>\n");
+            response.addHeader("X-Debug-QueryString-Received", request.getQueryString());
             out.close();
         }
     }
